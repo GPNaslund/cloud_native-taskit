@@ -1,0 +1,9 @@
+[load_balancer]
+load_balancer ansible_host=${load_balancer_ip} ansible_user=ubuntu ansible_ssh_private_key_file=${identity_file} ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+
+[jump_host]
+jump_host ansible_host=${jump_host_ip} ansible_user=ubuntu ansible_ssh_private_key_file=${identity_file} ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+
+
+[all:vars]
+load_balancer_ip=${load_balancer_ip}

@@ -1,0 +1,15 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+
+- name: Install required packages
+  apt:
+    name:
+      - snapd
+      - python3
+      - curl
+      - jq
+    state: present
+  become: true

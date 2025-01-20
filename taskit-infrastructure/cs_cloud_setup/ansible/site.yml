@@ -1,0 +1,27 @@
+- name: Configure common settings for all nodes
+  hosts: all
+  roles:
+    - common
+
+- name: Configure first control plane node
+  hosts: control_plane[0]
+  roles:
+    - microk8s
+    - first_control_plane
+
+- name: Configure additional control plane nodes
+  hosts: control_plane[1:]
+  roles:
+    - microk8s
+    - additional_control_plane
+
+- name: Configure worker nodes
+  hosts: workers
+  roles:
+    - microk8s
+    - worker
+
+- name: Configure load balancer
+  hosts: loadbalancer
+  roles:
+    - loadbalancer

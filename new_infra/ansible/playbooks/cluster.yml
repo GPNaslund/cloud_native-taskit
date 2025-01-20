@@ -1,0 +1,16 @@
+---
+- hosts: load_balancer
+  become: true
+  roles:
+    - load_balancer
+
+- hosts: control_plane
+  become: true
+  become_user: root
+  roles:
+    - control_plane
+
+- hosts: worker_node
+  become: true
+  roles:
+    - worker_node

@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option go_package = ".";
+
+
+service SessionLayer {
+    rpc GetSession (GetSessionRequest) returns (GetSessionResponse);
+    rpc CreateSession (CreateSessionRequest) returns (CreateSessionResponse);
+    rpc DeleteSession (DeleteSessionRequest) returns (DeleteSessionResponse);
+}
+
+enum SessionStatus {
+    Session_Success = 0;
+    Session_Database_Error = 1;
+    Session_Internal_Error = 2;
+    Session_No_Session_Found = 3;
+}
+
+message GetSessionRequest {
+    string user_id = 1;
+}
+
+message GetSessionResponse {
+    SessionStatus status = 1;
+    optional string session_token = 2;
+}
+
+message CreateSessionRequest {
+    string user_id = 1;
+}
+
+message CreateSessionResponse {
+    SessionStatus status = 1;
+    optional string session_token = 2;
+}
+
+message DeleteSessionRequest {
+    string session_token = 1;
+}
+
+message DeleteSessionResponse {
+    SessionStatus status = 1;
+}

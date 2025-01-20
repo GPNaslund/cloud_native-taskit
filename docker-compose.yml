@@ -1,0 +1,80 @@
+version: "3.8"
+services:
+  frontend:
+    build:
+      context: ./nextjs-taskit-client/client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_BASE_URL=http://taskit-service:8080
+    depends_on:
+      - taskit-service
+
+  taskit-service:
+    build:
+      context: ./go-taskit-service
+    ports:
+      - "8080:8080"
+    environment:
+      - TASKIT_DATASERVICE_ADDRESS=data-service:50051
+      - TASKIT_SESSIONSERVICE_ADDRESS=session-service:50052
+      - TASKIT_SERVICE_PORT=0.0.0.0:8080
+    depends_on:
+      - data-service
+      - session-service
+  data-service:
+    build:
+      context: ./go-data-service
+    ports:
+      - "50051:50051"
+    environment:
+      - TASKIT_DATASERVICE_ADDRESS=0.0.0.0:50051
+      - TASKIT_MONGODB_URI=mongodb://root:example@mongo:27017/taskit?authSource=admin
+    depends_on:
+      mongo:
+        condition: service_healthy
+  session-service:
+    build:
+      context: ./go-session-service
+    ports:
+      - "50052:50052"
+    environment:
+      - REDIS_CONNECTION_STRING=redis://redis:6379
+      - TASKIT_SESSIONSERVICE_ADDRESS=0.0.0.0:50052
+    depends_on:
+      redis:
+        condition: service_healthy
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: taskit
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: mongosh --eval "db.adminCommand('ping')"
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+volumes:
+  mongo_data:
+    driver: local
+  redis_data:
+    driver: local

@@ -1,0 +1,62 @@
+- name: Setup LXD and provision MicroK8s cluster
+  hosts: vps
+  become: true
+  tasks:
+    - name: Install LXD
+      apt:
+        name: lxd
+        state: present
+        update_cache: yes
+
+    - name: Initialize LXD if not already initialized
+      command: lxd init --auto
+      changed_when: false
+      failed_when: false
+
+    - name: Create LXD profile for MicroK8s
+      community.general.lxd_profile:
+        name: "{{ lxd_profile_name }}"
+        state: present
+        config:
+          limits.memory: "{{ vm_memory }}"
+          limits.cpu: "{{ vm_cpu_count }}"
+        devices:
+          root:
+            path: /
+            pool: default
+            type: disk
+          eth0:
+            name: eth0
+            network: lxdbr0
+            type: nic
+
+    - name: Launch control plane VM
+      community.general.lxd_container:
+        name: "{{ control_node_name }}"
+        state: started
+        source:
+          type: image
+          mode: pull
+          server: https://images.linuxcontainers.org
+          protocol: simplestreams
+          alias: "{{ ubuntu_image }}"
+        profiles: ["{{ lxd_profile_name }}"]
+        wait_for_ipv4_addresses: true
+        type: virtual-machine
+      register: control_plane
+
+    - name: Launch worker VMs
+      community.general.lxd_container:
+        name: "{{ worker_node_prefix }}-{{ item }}"
+        state: started
+        source:
+          type: image
+          mode: pull
+          server: https://images.linuxcontainers.org
+          protocol: simplestreams
+          alias: "{{ ubuntu_image }}"
+        profiles: ["{{ lxd_profile_name }}"]
+        wait_for_ipv4_addresses: true
+        type: virtual-machine
+      with_sequence: count="{{ worker_count }}"
+      register: workers

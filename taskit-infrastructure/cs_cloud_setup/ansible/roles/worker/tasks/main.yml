@@ -1,0 +1,6 @@
+---
+- name: Join worker node to cluster
+  shell: "{{ hostvars['localhost']['cluster_join_command'] }} --worker"
+  become: true
+  retries: 3
+  delay: 10

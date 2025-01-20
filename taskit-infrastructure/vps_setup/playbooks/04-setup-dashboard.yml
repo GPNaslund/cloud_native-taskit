@@ -1,0 +1,63 @@
+- name: Enable and configure Kubernetes Dashboard
+  hosts: vps
+  become: true
+  vars:
+    dashboard_port: "{{ k8s_ports.dashboard }}"
+  tasks:
+    - name: Enable MicroK8s dashboard addon
+      shell: |
+        lxc exec {{ control_node_name }} -- microk8s enable dashboard
+      register: dashboard_enable
+      changed_when: "'Enabling Dashboard' in dashboard_enable.stdout"
+
+    - name: Wait for dashboard pods to be ready
+      shell: |
+        lxc exec {{ control_node_name }} -- microk8s kubectl wait --namespace=kube-system \
+          --for=condition=ready pod \
+          --selector=k8s-app=kubernetes-dashboard \
+          --timeout=300s
+      register: wait_result
+      retries: 5
+      delay: 10
+      until: wait_result.rc == 0
+
+    - name: Create dashboard service patch file
+      copy:
+        dest: "/tmp/dashboard-patch.yaml"
+        content: |
+          spec:
+            ports:
+            - port: 443
+              protocol: TCP
+              targetPort: 8443
+              nodePort: {{ dashboard_port }}
+            type: NodePort
+
+    - name: Patch kubernetes-dashboard service
+      shell: |
+        lxc exec {{ control_node_name }} -- microk8s kubectl -n kube-system patch svc kubernetes-dashboard \
+          -p "$(cat /tmp/dashboard-patch.yaml)"
+      register: patch_result
+
+    - name: Clean up patch file
+      file:
+        path: "/tmp/dashboard-patch.yaml"
+        state: absent
+
+    - name: Get dashboard token
+      shell: |
+        lxc exec {{ control_node_name }} -- microk8s kubectl -n kube-system create token kubernetes-dashboard
+      register: dashboard_token
+
+    - name: Save dashboard token to file
+      copy:
+        content: "{{ dashboard_token.stdout }}"
+        dest: "{{ playbook_dir }}/../dashboard_token.txt"
+        mode: '0600'
+
+    - name: Show dashboard access information
+      debug:
+        msg: 
+          - "Dashboard has been enabled and configured to port {{ dashboard_port }}"
+          - "Token has been saved to dashboard_token.txt"
+          - "You can access the dashboard through your configured nginx proxy at /a2/dashboard/"

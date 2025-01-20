@@ -1,0 +1,10 @@
+.DS_Store
+.idea
+*.log
+tmp/
+
+terraform/terraform.tfvars
+terraform/.terraform
+terraform/.terraform.*
+
+ansible/inventory.ini

@@ -1,0 +1,12 @@
+[submodule "assignment-2-software-patterns-and-architecture/cloud_native-taskit"]
+	path = assignment-2-software-patterns-and-architecture/cloud_native-taskit
+	url = https://github.com/GPNaslund/cloud_native-taskit.git
+[submodule "go-data-service"]
+	path = go-data-service
+	url = https://github.com/GPNaslund/cloud_native-taskit.git
+[submodule "go-session-service"]
+	path = go-session-service
+	url = https://github.com/GPNaslund/cloud_native-taskit.git
+[submodule "go-notification-service"]
+	path = go-notification-service
+	url = https://github.com/GPNaslund/cloud_native-taskit.git

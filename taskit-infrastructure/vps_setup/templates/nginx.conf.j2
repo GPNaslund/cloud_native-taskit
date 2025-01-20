@@ -1,0 +1,52 @@
+server {
+    root /var/www/html;
+    server_name {{ domain_name }} {{ www_domain }};
+    listen [::]:443 ssl ipv6only=on;
+    listen 443 ssl;
+    
+    ssl_certificate /etc/letsencrypt/live/{{ www_domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ www_domain }}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    {% for location in proxy_locations %}
+    location {{ location.path }} {
+        proxy_pass {{ location.protocol }}://{{ cluster_ip }}:{{ location.port }}/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_http_version 1.1;
+        
+        {% if location.use_upgrade %}
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        {% endif %}
+        
+        {% if location.ssl_verify is defined and not location.ssl_verify %}
+        proxy_ssl_verify off;
+        {% endif %}
+        
+        {% if location.extra_buffers %}
+        proxy_buffer_size 128k;
+        proxy_buffers 4 256k;
+        proxy_busy_buffers_size 256k;
+        {% endif %}
+    }
+    {% endfor %}
+}
+
+server {
+    if ($host = {{ www_domain }}) {
+        return 301 https://$host$request_uri;
+    }
+    
+    if ($host = {{ domain_name }}) {
+        return 301 https://www.$host$request_uri;
+    }
+    
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name {{ domain_name }} {{ www_domain }};
+    return 404;
+}

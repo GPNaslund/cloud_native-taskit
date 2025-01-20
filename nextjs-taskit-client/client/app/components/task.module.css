@@ -1,0 +1,32 @@
+.root {
+}
+
+.header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.footer {
+    display: flex;
+    justify-content: center;
+}
+
+.input {
+    padding: 0px !important;
+    margin: 0px !important;
+    border: none;
+    background: none;
+    width: 80% !important;
+}
+
+.hidden {
+    display: none;
+}
+
+.cancelSaveContainer {
+    display: flex;
+    flex-direction: row;
+    width: 50%;
+    justify-content: space-around;
+}

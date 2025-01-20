@@ -1,0 +1,33 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/session-service:${CI_COMMIT_TAG:-latest}"
+
+deploy:
+  stage: deploy
+  image:
+    name: gcr.io/k8s-skaffold/skaffold:v2.8.0
+    entrypoint: ['']
+  when: manual
+  script:
+    - kubectl config get-contexts
+    - kubectl config use-context $K8S_CONTEXT
+    # Create registry secret for pulling images
+    - kubectl delete secret regcred || true
+    - kubectl create secret docker-registry regcred --docker-server=$CI_REGISTRY --docker-username=$CI_DEPLOY_USER --docker-password=$CI_DEPLOY_PASSWORD
+    # Deploy using skaffold
+    - skaffold deploy --profile production --images gitlab.lnu.se:5050/2dv013/student/gn222gq/part2-architecture/go-session-service/session-service:${CI_COMMIT_TAG:-latest}
+    # Verify deployment
+    - kubectl get deployments
+    - kubectl get pods
+    - kubectl get services

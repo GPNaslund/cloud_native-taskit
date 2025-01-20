@@ -1,0 +1,16 @@
+apiVersion: skaffold/v2beta29
+kind: Config
+build:
+  artifacts:
+  - image: gitlab.lnu.se:5050/2dv013/student/gn222gq/part2-architecture/go-data-service/data-service
+    docker:
+      dockerfile: Dockerfile
+deploy:
+  kubectl:
+    manifests:
+    - k8s/*.yaml
+profiles:
+  - name: production
+    build:
+      tagPolicy:
+        gitCommit: {}

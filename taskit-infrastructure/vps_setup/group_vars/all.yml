@@ -1,0 +1,37 @@
+lxd_profile_name: microk8s
+control_node_name: k8s-control
+worker_node_prefix: k8s-worker
+worker_count: 3
+ubuntu_image: ubuntu:22.04
+vm_memory: 4GB
+vm_cpu_count: 2
+
+# SSL/Domain Configuration
+domain_name: "yourdomain.com"
+www_domain: "www.yourdomain.com"
+email: "your-email@example.com"
+
+k8s_ports:
+  dashboard: 32000
+  taskit_frontend: 30590
+  taskit_api: 30888
+
+proxy_locations:
+  - name: "dashboard"
+    path: "/a2/dashboard/"
+    port: "{{ k8s_ports.dashboard }}"
+    protocol: "https"
+    ssl_verify: false
+    use_upgrade: true
+  - name: "taskit"
+    path: "/a2/taskit/"
+    port: "{{ k8s_ports.taskit_frontend }}"
+    protocol: "http"
+    use_upgrade: true
+    extra_buffers: true
+  - name: "taskit-api"
+    path: "/a2/taskit/api/"
+    port: "{{ k8s_ports.taskit_api }}"
+    protocol: "http"
+    use_upgrade: true
+    extra_buffers: true

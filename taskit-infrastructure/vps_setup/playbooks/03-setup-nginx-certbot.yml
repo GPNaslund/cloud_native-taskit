@@ -1,0 +1,54 @@
+- name: Install and configure Nginx with Certbot
+  hosts: vps
+  become: true
+  vars:
+    cluster_ip: ""
+  tasks:
+    - name: Get microk8s cluster IP
+      shell: |
+        lxc list {{ control_node_name }} --format json | jq -r '.[0].state.network.eth0.addresses[] | select(.family=="inet").address'
+      register: cluster_ip_result
+      
+    - name: Set cluster IP fact
+      set_fact:
+        cluster_ip: "{{ cluster_ip_result.stdout }}"
+
+    - name: Save cluster IP to file
+      copy:
+        content: "{{ cluster_ip }}"
+        dest: "{{ playbook_dir }}/../cluster_ip.txt"
+        mode: '0644'
+
+    - name: Install required packages
+      apt:
+        name: 
+          - nginx
+          - python3-certbot-nginx
+          - software-properties-common
+        state: present
+        update_cache: yes
+
+    - name: Create Nginx configuration
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/default
+        mode: '0644'
+      notify: reload nginx
+
+    - name: Obtain SSL certificate
+      command: >
+        certbot --nginx 
+        -d {{ domain_name }} 
+        -d {{ www_domain }}
+        --email {{ email }}
+        --agree-tos
+        --non-interactive
+        --redirect
+      args:
+        creates: /etc/letsencrypt/live/{{ www_domain }}
+
+  handlers:
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded

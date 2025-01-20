@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextjs-taskit
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextjs-taskit
+  template:
+    metadata:
+      labels:
+        app: nextjs-taskit
+    spec:
+      containers:
+      - name: nextjs-taskit
+        image: gitlab.lnu.se:5050/2dv013/student/gn222gq/part2-architecture/nextjs-taskit-client/nextjs-taskit
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          value: "https://www.gpnaslund.pro/a2/taskit/api" 
+        - name: NEXT_PUBLIC_BASE_PATH
+          value: "/a2/taskit"
+        ports:
+          - containerPort: 3000
+            name: http
+      imagePullSecrets:
+      - name: regcred

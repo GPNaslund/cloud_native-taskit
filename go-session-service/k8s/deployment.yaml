@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskit-session
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskit-session
+  template:
+    metadata:
+      labels:
+        app: taskit-session
+    spec:
+      containers:
+      - name: taskit-session
+        image: gitlab.lnu.se:5050/2dv013/student/gn222gq/part2-architecture/go-session-service/session-service
+        env:
+        - name: REDIS_CONNECTION_STRING
+          value: "redis://redis:6379"
+        - name: TASKIT_SESSIONSERVICE_ADDRESS
+          value: "0.0.0.0:50052"
+        ports:
+        - containerPort: 50052
+      imagePullSecrets:
+      - name: regcred

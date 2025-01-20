@@ -1,0 +1,14 @@
+ci_access:
+  projects:
+    - id: 2dv013/student/gn222gq/part2-architecture/nextjs-taskit-client
+    - id: 2dv013/student/gn222gq/part2-architecture/go-taskit-service
+    - id: 2dv013/student/gn222gq/part2-architecture/go-session-service
+    - id: 2dv013/student/gn222gq/part2-architecture/go-data-service
+    - id: 2dv013/student/gn222gq/part2-architecture/go-notification-service
+  
+gitops: 
+  manifest_projects:
+    - id: 2dv013/student/gn222gq/part2-architecture/k8s-config
+      default_namespace: default
+      paths: 
+        - glob: 'k8s/*.{yaml,yml}'

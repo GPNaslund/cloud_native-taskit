@@ -1,0 +1,46 @@
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+
+events {
+    worker_connections 768;
+}
+
+stream {
+    upstream kubernetes_api {
+        {% for host in groups['control_plane'] %}
+        server {{ hostvars[host]['ansible_host'] }}:6443;
+        {% endfor %}
+    }
+
+    server {
+        listen 6443;
+        proxy_pass kubernetes_api;
+        proxy_timeout 10m;
+        proxy_connect_timeout 10m;
+    }
+}
+
+http {
+    upstream kubernetes_http {
+        {% for host in groups['workers'] %}
+        server {{ hostvars[host]['ansible_host'] }}:80;
+        {% endfor %}
+    }
+
+    server {
+        listen 80;
+        listen 443 ssl;
+
+        location / {
+            proxy_pass http://kubernetes_http;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}

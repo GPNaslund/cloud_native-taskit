@@ -1,0 +1,23 @@
+- name: Install and configure MicroK8s on control plane
+  hosts: vps
+  become: true
+  tasks:
+    - name: Install MicroK8s on control plane
+      shell: |
+        lxc exec {{ control_node_name }} -- snap install microk8s --classic
+      register: microk8s_install
+
+    - name: Get join command from control plane
+      shell: |
+        lxc exec {{ control_node_name }} -- microk8s add-node --token-ttl 7200
+      register: join_command
+
+    - name: Install MicroK8s on workers and join cluster
+      shell: |
+        lxc exec {{ worker_node_prefix }}-{{ item }} -- snap install microk8s --classic
+        lxc exec {{ worker_node_prefix }}-{{ item }} -- {{ join_command.stdout_lines[0] }}
+      with_sequence: count="{{ worker_count }}"
+
+    - name: Taint control plane node
+      shell: |
+        lxc exec {{ control_node_name }} -- microk8s kubectl taint nodes {{ control_node_name }} node-role.kubernetes.io/master=:NoSchedule

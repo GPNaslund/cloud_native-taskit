@@ -1,0 +1,17 @@
+upstream control_plane_nodes {
+  {% for host in groups['control_plane'] %}
+  server {{ hostvars[host].ansible_host }}:80;
+  {% endfor %}
+}
+
+server {
+  listen 80;
+  listen 443;
+
+  location / {
+    proxy_pass http://control_plane_nodes;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}

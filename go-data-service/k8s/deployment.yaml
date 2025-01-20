@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskit-data
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskit-data
+  template:
+    metadata:
+      labels:
+        app: taskit-data
+    spec:
+      containers:
+      - name: taskit-data
+        image: gitlab.lnu.se:5050/2dv013/student/gn222gq/part2-architecture/go-data-service/data-service
+        env:
+        - name: TASKIT_MONGODB_URI
+          value: "mongodb://mongodb:27017"
+        - name: TASKIT_DATASERVICE_ADDRESS
+          value: "0.0.0.0:50051"
+        ports:
+        - containerPort: 50051
+      imagePullSecrets:
+      - name: regcred

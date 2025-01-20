@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskit-service
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: taskit-service
+  template:
+    metadata:
+      labels:
+        app: taskit-service
+    spec:
+      containers:
+      - name: taskit-service
+        image: gitlab.lnu.se:5050/2dv013/student/gn222gq/part2-architecture/go-taskit-service/taskit-service
+        env:
+        - name: TASKIT_DATASERVICE_ADDRESS
+          value: "taskit-data:50051"
+        - name: TASKIT_SESSIONSERVICE_ADDRESS
+          value: "taskit-session:50052" 
+        - name: TASKIT_SERVICE_PORT
+          value: ":8888"
+        - name: HOST_BASE_URL
+          value: "https://www.gpnaslund.pro"
+        - name: AMQP_CONN_STRING
+          value: "amqp://guest:guest@rabbitmq:5672/"
+        - name: TASK_NOTIFICATION_QUEUE_NAME
+          value: "task_status_updates"
+        ports:
+          - containerPort: 8888
+            name: http
+      imagePullSecrets:
+      - name: regcred
